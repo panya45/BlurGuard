@@ -1,0 +1,5 @@
+opencv-python-headless
+numpy
+facenet-pytorch
+torch>=2.1
+PyQt5

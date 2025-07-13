@@ -1,0 +1,35 @@
+# ฐานข้อมูล
+blurguard.db
+
+# วิดีโอ
+*.mp4
+
+*.md
+
+# ไฟล์ Python bytecode
+__pycache__/
+*.py[cod]
+
+# ไฟล์ที่คอมไพล์แล้ว
+*.pyc
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# IDE and editor
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs และ coverage
+*.log
+.coverage
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# SQLite databases
+*.sqlite3
