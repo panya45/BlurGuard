@@ -1,0 +1,89 @@
+# BlurGuard: ระบบกล้อง AI ตรวจจับและเบลอใบหน้าแบบเรียลไทม์
+
+**BlurGuard** เป็นแอปพลิเคชัน Python ที่ใช้เทคโนโลยี AI ในการตรวจจับและจดจำใบหน้าเพื่อปกป้องความเป็นส่วนตัว โดยจะเบลอใบหน้าผู้ที่ไม่อยู่ในรายชื่อที่อนุญาต (Whitelist) แบบเรียลไทม์
+
+---
+
+## คุณสมบัติหลัก
+
+- ตรวจจับใบหน้าแบบเรียลไทม์ ด้วย MTCNN (ใช้ Apple MPS หรือ CPU)
+- จดจำใบหน้า (Face Recognition) โดยใช้ InceptionResnetV1
+- เบลอหรือพิกเซเลตใบหน้าผู้ไม่อยู่ใน Whitelist
+- จัดการฐานข้อมูล Whitelist (SQLite) เพิ่ม/ลบ/แสดงรายชื่อผู้ใช้
+- อินเทอร์เฟซกราฟิกด้วย PyQt5
+  - ปุ่ม Start/Stop สตรีมวิดีโอ
+  - ปุ่ม Record เพื่อบันทึกวิดีโอพร้อมการเบลอ
+  - หน้าต่างจัดการผู้ใช้ (Add/Delete User)
+  - Toggle Overlay แสดงกรอบและชื่อเฉพาะผู้รู้จัก
+- ปรับระดับความแรงของการเบลอได้ (ค่าเริ่มต้น 101×101)
+
+## โครงสร้างโฟลเดอร์
+
+```
+BlurGuard/
+├── modules/
+│   ├── video_capture.py      # จัดการกล้อง Continuity Camera
+│   ├── face_detection.py     # ตรวจจับใบหน้า (MTCNN)
+│   ├── face_recognition.py   # จดจำใบหน้า (InceptionResnetV1)
+│   ├── database.py           # SQLite Whitelist Manager
+│   └── blur.py               # ฟังก์ชันเบลอและพิกเซเลต ROI
+├── main.py                   # จุดเข้าโปรแกรม CLI/GUI
+├── ui.py                     # PyQt5 MainWindow
+├── requirements.txt          # ไลบรารีที่ต้องติดตั้ง
+└── README.md                 # ไฟล์นี้
+```
+
+## ติดตั้ง (Installation)
+
+1. ติดตั้ง Python 3.7 ขึ้นไป
+2. Clone โปรเจกต์:
+   ```bash
+   git clone https://github.com/username/BlurGuard.git
+   cd BlurGuard
+   ```
+3. ติดตั้ง dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## วิธีใช้งาน (Usage)
+
+### รันแบบ GUI
+
+```bash
+python main.py
+```
+
+- คลิก **Start** เพื่อเริ่มสตรีม
+- คลิก **Record** เพื่อเริ่ม/หยุดบันทึกวิดีโอ (ไฟล์จะถูกบันทึกในโฟลเดอร์ `records/`)
+- คลิก **Manage Users** เพื่อเปิดหน้าจอจัดการ Whitelist
+- ติ๊ก **Show Overlay** เพื่อแสดงกรอบใบหน้าและชื่อเฉพาะผู้รู้จัก
+- ใบหน้าที่ไม่รู้จักจะถูกเบลอเสมอ
+
+### รันแบบ CLI
+
+```bash
+python main.py --cli
+```
+
+- ใช้คำสั่งแสดงผลในเทอร์มินัล พร้อมโปรเซสการเบลอใบหน้า
+
+## จัดการ Whitelist
+
+1. คลิก **Manage Users** ใน UI
+2. ในหน้าต่าง
+   - **Add User**: เลือกกล้องและเริ่มสแกนหลายเฟรม รอ Countdown แล้วบันทึก
+   - **Delete User**: เลือกชื่อที่ต้องการลบ
+   - **List Users**: แสดงรายชื่อทั้งหมดในฐานข้อมูล
+
+## พารามิเตอร์สำคัญ
+
+- `modules/blur.py`: ปรับ `gaussian_blur_roi` ค่าเริ่มต้น `ksize=(101,101)`
+- `face_recognition.threshold`: ระยะห่าง cosine similarity ในการยืนยันตัวบุคคล (ปรับได้ในโค้ด)
+
+## พัฒนาต่อ (Future Work)
+
+- Export/Import Whitelist (CSV/JSON)
+- ตั้งค่าเบลอและ threshold ผ่าน UI
+- รองรับหลายกล้องพร้อมกัน
+- สร้างแพ็กเกจติดตั้ง (PyInstaller, py2app)
