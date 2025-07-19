@@ -3,3 +3,4 @@ numpy
 facenet-pytorch
 torch>=2.1
 PyQt5
+ultralytics
