@@ -209,27 +209,32 @@ class MainWindow(QWidget):
     def update_frame(self):
         frame = self.cap_mgr.read()
         # Always detect faces and process blur/overlay
-        boxes, _ = self.detector.detect(frame)
+        boxes, probs = self.detector.detect(frame)
         valid = []
-        for (x1, y1, x2, y2) in boxes:
+        for idx, (x1, y1, x2, y2) in enumerate(boxes):
             if x2 <= x1 or y2 <= y1:
                 continue
             crop = frame[y1:y2, x1:x2]
             if crop.size == 0:
                 continue
-            valid.append((x1, y1, x2, y2, crop))
+            valid.append((x1, y1, x2, y2, crop, probs[idx]))
         if valid:
-            boxes_f, face_imgs = zip(*[((x1,y1,x2,y2), crop) for x1,y1,x2,y2,crop in valid])
+            boxes_f, face_imgs, confs = zip(*[((x1, y1, x2, y2), crop, conf) for x1, y1, x2, y2, crop, conf in valid])
             results = self.recognizer.recognize_faces(face_imgs)
-            for (box, res) in zip(boxes_f, results):
+            for (box, res, conf) in zip(boxes_f, results, confs):
                 x1, y1, x2, y2 = box
+                # Always blur unknown faces
                 if res['id'] is None:
-                    # Unknown -> always blur
                     gaussian_blur_roi(frame, (x1, y1, x2, y2))
-                elif self.overlay_check.isChecked():
-                    # Known and overlay enabled -> draw box + name
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(frame, res['name'], (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                # Overlay (box, name, confidence) when enabled
+                if self.overlay_check.isChecked():
+                    # Display detection confidence as integer percent
+                    conf_text = f"{int(conf * 100)}%"
+                    cv2.putText(frame, conf_text, (x1, y2 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+                    if res['id'] is not None:
+                        # Known face: draw box and name
+                        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(frame, res['name'], (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         # Convert to QImage and display
         h, w, ch = frame.shape
         bytes_per_line = ch * w
